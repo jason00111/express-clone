@@ -18,19 +18,25 @@ function express () {
   }
 
   function httpHandler (method, pattern, callback) {
-    let paramNames = pattern.match(/:\w+/g)
+    let paramNames, regex
 
-    if (paramNames) {
-      paramNames = paramNames.map(param => param.slice(1))
-    }
+    if (pattern instanceof RegExp) {
+      regex = pattern
+    } else {
+      paramNames = pattern.match(/:\w+/g)
 
-    const regex = RegExp(
-      pattern
+      if (paramNames) {
+        paramNames = paramNames.map(param => param.slice(1))
+      }
+
+      regex = RegExp(
+        pattern
         .replace(/[^:\w]/g, '\\$&')
         .replace(/:\w+/g, '(\\w+)')
         .replace(/.+/, '^$&$'),
-      'g'
-    )
+        'g'
+      )
+    }
 
     middlewareStack.push(function (req, res, next) {
       const match = regex.exec(req.path)
