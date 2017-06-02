@@ -1,6 +1,7 @@
 const http = require('http')
 const url = require('url')
 const queryString = require('querystring')
+const fs = require('fs')
 
 function express () {
   const middlewareStack = []
@@ -73,6 +74,14 @@ function express () {
 
     res.type = function (contentType) {
       res.setHeader('Content-Type', contentType)
+    }
+
+    res.sendFile = function (filePath) {
+      res.setHeader('Content-Type', 'text/html')
+
+      fs.readFile(filePath, function (err, contents) {
+        res.end(contents)
+      })
     }
 
     callMiddleware(0, req, res)
