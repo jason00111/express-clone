@@ -2,6 +2,7 @@ const http = require('http')
 const url = require('url')
 const queryString = require('querystring')
 const fs = require('fs')
+const path = require('path')
 
 function express () {
   const middlewareStack = []
@@ -86,7 +87,7 @@ function express () {
     res.sendFile = function (filePath) {
       res.type('text/html')
 
-      fs.readFile(filePath, function (err, contents) {
+      fs.readFile(filePath, 'utf8', function (err, contents) {
         res.end(contents)
       })
     }
@@ -121,6 +122,18 @@ function express () {
   }
 
   return app
+}
+
+express.static = function (root) {
+  return function (req, res, next) {
+    fs.readFile(path.join(root, req.url), 'utf8', function(err, contents) {
+      if (err) {
+        next()
+      } else {
+        res.send(contents)
+      }
+    })
+  }
 }
 
 module.exports = express
