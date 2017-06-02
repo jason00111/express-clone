@@ -61,31 +61,30 @@ function express () {
       return res
     }
 
-    res.json = function (data) {
-      res.setHeader('Content-Type', 'application/json')
-      res.end(JSON.stringify(data))
-    }
-
-    res.send = function (data) {
-      if (typeof data === 'string') {
-        res.setHeader('Content-Type', 'text/html')
-        res.end(data)
-      } else if (typeof data === 'object') {
-        res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify(data))
-      }
-    }
-
     res.set = function (field, value) {
       res.setHeader(field, value)
     }
 
     res.type = function (contentType) {
-      res.setHeader('Content-Type', contentType)
+      res.set('Content-Type', contentType)
+    }
+
+    res.json = function (data) {
+      res.type('application/json')
+      res.end(JSON.stringify(data))
+    }
+
+    res.send = function (data) {
+      if (typeof data === 'string') {
+        res.type('text/html')
+        res.end(data)
+      } else if (typeof data === 'object') {
+        res.json(data)
+      }
     }
 
     res.sendFile = function (filePath) {
-      res.setHeader('Content-Type', 'text/html')
+      res.type('text/html')
 
       fs.readFile(filePath, function (err, contents) {
         res.end(contents)
