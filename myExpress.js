@@ -66,7 +66,15 @@ function express () {
       res.end(JSON.stringify(data))
     }
 
-    res.send = res.end
+    res.send = function (data) {
+      if (typeof data === 'string') {
+        res.setHeader('Content-Type', 'text/html')
+        res.end(data)
+      } else if (typeof data === 'object') {
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify(data))
+      }
+    }
 
     res.set = function (field, value) {
       res.setHeader(field, value)
