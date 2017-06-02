@@ -5,21 +5,43 @@ const queryString = require('querystring')
 function express () {
   const middlewareStack = []
 
-  function callMiddleware (i, req, res) {
-    if (i >= middlewareStack.length) return
+  function callMiddleware (middlewareIndex, req, res) {
+    if (middlewareIndex >= middlewareStack.length) return
 
     function next () {
-      callMiddleware(i + 1, req, res)
+      callMiddleware(middlewareIndex + 1, req, res)
     }
 
-    middlewareStack[i](req, res, next)
+    middlewareStack[middlewareIndex](req, res, next)
   }
 
   function httpHandler (method, pattern, callback) {
+    let paramNames = pattern.match(/:\w+/g)
+
+    if (paramNames) {
+      paramNames = paramNames.map(param => param.slice(1))
+    }
+
+    const regex = RegExp(
+      pattern
+        .replace(/[^:\w]/g, '\\$&')
+        .replace(/:\w+/g, '(\\w+)')
+        .replace(/.+/, '^$&$'),
+      'g'
+    )
+
     middlewareStack.push(function (req, res, next) {
-      if (
-        req.pathname === pattern && req.method === method
-      ) {
+      const match = regex.exec(req.path)
+
+      if ( match && req.method === method ) {
+
+        if (paramNames) {
+          req.params = {}
+          paramNames.forEach((paramName, index) => {
+            req.params[paramName] = match[index + 1]
+          })
+        }
+
         callback(req, res)
       } else {
         next()
@@ -30,14 +52,12 @@ function express () {
   const server = http.createServer(function (req, res) {
     const parsedUrl = url.parse(req.url)
 
-    req.pathname = parsedUrl.pathname
+    req.path = parsedUrl.pathname
     req.query = queryString.parse(parsedUrl.query)
 
     res.send = res.end
 
     callMiddleware(0, req, res)
-
-    res.send('fallthrough')
   })
 
   const app = {}
