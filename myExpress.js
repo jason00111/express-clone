@@ -55,7 +55,25 @@ function express () {
     req.path = parsedUrl.pathname
     req.query = queryString.parse(parsedUrl.query)
 
+    res.status = function (code) {
+      res.statusCode = code
+      return res
+    }
+
+    res.json = function (data) {
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify(data))
+    }
+
     res.send = res.end
+
+    res.set = function (field, value) {
+      res.setHeader(field, value)
+    }
+
+    res.type = function (contentType) {
+      res.setHeader('Content-Type', contentType)
+    }
 
     callMiddleware(0, req, res)
   })
